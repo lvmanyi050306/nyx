@@ -1,0 +1,7 @@
+data/raw/*.dat
+video/frames/
+report/rendered_report/
+*.asv
+*.tmp
+.DS_Store
+Thumbs.db
