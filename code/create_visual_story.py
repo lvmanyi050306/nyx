@@ -34,6 +34,35 @@ FONT_L = font(42, True)
 FONT_S = font(16)
 
 
+def text_width(draw, text, font_obj):
+    bbox = draw.textbbox((0, 0), text, font=font_obj)
+    return bbox[2] - bbox[0]
+
+
+def wrap_text(draw, text, font_obj, max_width):
+    lines = []
+    current = ""
+    for char in text:
+        candidate = current + char
+        if current and text_width(draw, candidate, font_obj) > max_width:
+            lines.append(current)
+            current = char
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines
+
+
+def draw_wrapped_text(draw, xy, text, font_obj, fill, max_width, spacing=8):
+    x, y = xy
+    for line in wrap_text(draw, text, font_obj, max_width):
+        draw.text((x, y), line, font=font_obj, fill=fill)
+        bbox = draw.textbbox((x, y), line, font=font_obj)
+        y += bbox[3] - bbox[1] + spacing
+    return y
+
+
 def read_volume(index):
     path = RAW_DIR / f"{index:04d}.dat"
     raw = np.fromfile(path, dtype="<f4")
@@ -86,6 +115,25 @@ def projection_image(volume, size=(460, 460)):
 def read_stats():
     with (PROCESSED_DIR / "density_stats.csv").open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
+
+
+def raw_sequence_available():
+    return all((RAW_DIR / f"{i:04d}.dat").is_file() and (RAW_DIR / f"{i:04d}.dat").stat().st_size > 0 for i in range(100))
+
+
+def read_existing_metrics():
+    metrics_path = PROCESSED_DIR / "structure_metrics.csv"
+    if not metrics_path.exists():
+        raise FileNotFoundError("Missing structure_metrics.csv and raw Nyx data; cannot rebuild visual story assets.")
+    with metrics_path.open("r", encoding="utf-8-sig", newline="") as f:
+        rows = list(csv.DictReader(f))
+    metrics = []
+    for row in rows:
+        metrics.append({
+            key: (int(value) if key == "time_index" else float(value) if key != "timestep" else value)
+            for key, value in row.items()
+        })
+    return metrics
 
 
 def compute_histograms_and_metrics():
@@ -267,7 +315,7 @@ def draw_atlas(volumes_cache, metrics):
     for idx, pos in zip([0, 30, 60, 99], slots):
         x, y = pos
         draw.rounded_rectangle((x, y, x + 370, y + 485), radius=12, fill=(255, 255, 255), outline=(210, 218, 230), width=2)
-        pimg = projection_image(volumes_cache.get(idx, read_volume(idx)), (330, 330))
+        pimg = representative_panel_image(idx, volumes_cache, (330, 330))
         img.paste(pimg, (x + 20, y + 20))
         m = metrics[idx]
         draw.text((x + 22, y + 365), f"t{idx:04d}", font=FONT_B, fill=(24, 55, 92))
@@ -284,10 +332,28 @@ def draw_atlas(volumes_cache, metrics):
         y = 750
         draw.rounded_rectangle((x, y, x + 350, y + 220), radius=10, fill=(255, 255, 255), outline=(210, 218, 230), width=2)
         draw.text((x + 18, y + 18), title, font=FONT_B, fill=(34, 74, 118))
-        draw.multiline_text((x + 18, y + 70), body, font=FONT, fill=(65, 74, 90), spacing=8)
+        draw_wrapped_text(draw, (x + 18, y + 70), body, FONT, (65, 74, 90), 310)
     draw.text((65, 1080), "设计意图：用同一传递函数对比不同时间步，避免每帧自适应调色造成的视觉误判。", font=FONT, fill=(70, 80, 95))
     draw.text((65, 1125), "分析指向：体绘制给空间证据，直方图给统计证据，刷选把二者在同一阈值下联动。", font=FONT, fill=(70, 80, 95))
     img.save(STORY_DIR / "cosmic_web_atlas.png")
+
+
+def representative_panel_image(index, volumes_cache, size):
+    if index in volumes_cache:
+        return projection_image(volumes_cache[index], size)
+
+    rendered = RESULTS_DIR / "02_volume_render" / f"volume_t{index:04d}.png"
+    if rendered.exists():
+        with Image.open(rendered).convert("RGB") as src:
+            w, h = src.size
+            crop_top = min(70, h // 8)
+            crop = src.crop((0, crop_top, w, h))
+            crop.thumbnail(size, Image.Resampling.LANCZOS)
+            canvas = Image.new("RGB", size, (248, 250, 252))
+            canvas.paste(crop, ((size[0] - crop.width) // 2, (size[1] - crop.height) // 2))
+            return canvas
+
+    raise FileNotFoundError(f"Missing raw volume and rendered fallback for timestep {index:04d}.")
 
 
 def draw_interaction_storyboard():
@@ -362,13 +428,19 @@ def create_video(metrics):
 def main():
     STORY_DIR.mkdir(parents=True, exist_ok=True)
     VIDEO_DIR.mkdir(exist_ok=True)
-    bins, hist, metrics, volumes_cache = compute_histograms_and_metrics()
-    draw_heatmap(bins, hist)
+    if raw_sequence_available():
+        bins, hist, metrics, volumes_cache = compute_histograms_and_metrics()
+        draw_heatmap(bins, hist)
+        create_video(metrics)
+    else:
+        metrics = read_existing_metrics()
+        volumes_cache = {}
+        print("Raw data files are not present; rebuilding static story images from existing results.")
+
     draw_metrics_dashboard(metrics)
     draw_transfer_function()
     draw_atlas(volumes_cache, metrics)
     draw_interaction_storyboard()
-    create_video(metrics)
     print(STORY_DIR)
     print(VIDEO_DIR / "demo.mp4")
 

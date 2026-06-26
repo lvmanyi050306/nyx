@@ -4,11 +4,22 @@ function interactive_dashboard(rawDir, timestep)
 % Example:
 %   interactive_dashboard(fullfile(pwd, "data", "raw"), "0099")
 
+if nargin < 1 || strlength(string(rawDir)) == 0
+    projectRoot = fileparts(fileparts(mfilename("fullpath")));
+    rawDir = fullfile(projectRoot, "data", "raw");
+end
+
 if nargin < 2
     timestep = "0099";
 end
 
 filePath = fullfile(rawDir, string(timestep) + ".dat");
+info = dir(filePath);
+if isempty(info) || info.bytes == 0
+    error("interactive_dashboard:MissingRawData", ...
+        "Cannot open %s. Place the Nyx raw files in data/raw before using the linked brushing dashboard.", filePath);
+end
+
 volume = read_nyx_dat(filePath);
 logDensity = log10(max(volume, eps("single")));
 values = logDensity(:);

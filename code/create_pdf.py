@@ -51,7 +51,7 @@ def para(text, sty):
 
 
 def bullet(text, sty):
-    return Paragraph("• " + text, sty["bullet"])
+    return Paragraph("- " + text, sty["bullet"])
 
 
 def table(data, col_widths=None):
@@ -89,6 +89,11 @@ def build_report_pdf():
     metrics = read_csv(METRICS_PATH)
     first, mid, last = stats[0], stats[49], stats[-1]
     mf, mmid, ml = metrics[0], metrics[49], metrics[-1]
+    std_growth = (float(last["std_density"]) / float(first["std_density"]) - 1) * 100
+    max_growth = (float(last["max_density"]) / float(first["max_density"]) - 1) * 100
+    spread_growth = (float(ml["spread_p99_p01"]) / float(mf["spread_p99_p01"]) - 1) * 100
+    void_delta = (float(ml["void_fraction_vs_t0000_p05"]) - float(mf["void_fraction_vs_t0000_p05"])) * 100
+    entropy_growth = (float(ml["log_density_entropy"]) / float(mf["log_density_entropy"]) - 1) * 100
 
     story = [
         Spacer(1, 34 * mm),
@@ -144,6 +149,14 @@ def build_report_pdf():
         Paragraph("4 体绘制方案：传递函数、光照与视觉编码", sty["h1"]),
         para("体绘制采用前向 alpha 合成。传递函数的关键思想是：低密度空洞不完全隐藏，而是以深色暗雾保留背景；中等密度结构用青蓝色显示连续丝束；极高密度节点用金色到暖白色突出。", sty),
         para("光照并不追求真实天文照明，而是使用梯度幅值近似“结构边界强度”。密度变化越剧烈的区域越亮，视觉上更容易识别空洞边界、丝状结构和团块节点。", sty),
+        table([
+            ["环节", "实现方式", "分析目的"],
+            ["动态范围压缩", "对密度取 log10，并用分位数裁剪到稳定显示区间", "保留主体结构，同时避免极端峰值压暗整体图像"],
+            ["透明度设计", "低密度给极低 alpha，中高密度随 smoothstep 增强", "让空洞作为背景存在，让丝状结构和节点成为视觉焦点"],
+            ["梯度光照", "用三维梯度幅值增强边界亮度", "突出密度突变边界，帮助识别空洞壁和宇宙网骨架"],
+            ["时间对比", "代表帧采用同一视觉语法和一致阈值思想", "避免逐帧单独调色造成演化强弱的误判"],
+        ], [32 * mm, 72 * mm, 70 * mm]),
+        Spacer(1, 5 * mm),
     ]
     story += image(STORY_DIR / "transfer_function_design.png", "图 3  传递函数设计图：颜色、透明度与梯度光照的联合编码", sty, 170 * mm)
 
@@ -170,6 +183,15 @@ def build_report_pdf():
         ], [28 * mm, 25 * mm, 25 * mm, 25 * mm, 71 * mm]),
         Spacer(1, 5 * mm),
         para(f"从统计量看，标准差由 {float(first['std_density']):.4f} 增加到 {float(last['std_density']):.4f}，最大密度由 {float(first['max_density']):.4f} 增加到 {float(last['max_density']):.4f}。这说明演化后期物质分布更不均匀，极端高密度区域更强。", sty),
+        table([
+            ["派生量", "变化幅度", "解释"],
+            ["标准差增长率", f"{std_growth:+.1f}%", "全域密度波动增强，均匀背景被拉开"],
+            ["最大密度增长率", f"{max_growth:+.1f}%", "局部高密度峰值持续被引力聚集放大"],
+            ["P99-P01 跨度增长率", f"{spread_growth:+.1f}%", "低密度端与高密度端同步分化"],
+            ["空洞占比增量", f"{void_delta:+.1f} 个百分点", "相对 t0000 的低密度阈值，后期空洞区域显著扩张"],
+            ["log 密度熵增长率", f"{entropy_growth:+.1f}%", "分布形态更复杂，单峰集中性减弱"],
+        ], [44 * mm, 34 * mm, 96 * mm]),
+        Spacer(1, 5 * mm),
     ]
     story += image(STORY_DIR / "structure_metrics_dashboard.png", "图 7  结构形成统计指纹：波动、峰值、空洞占比和分布复杂度", sty, 170 * mm)
     story += [
@@ -183,6 +205,14 @@ def build_report_pdf():
         Paragraph("7 相空间交互刷选：从统计尾部回到空间结构", sty["h1"]),
         para("交互仪表盘 interactive_dashboard.m 的目标是把统计空间和物理空间打通。用户在直方图中选择密度百分位区间，例如 99% 到 100% 的前 1% 高密度尾部，右侧三维空间视图会实时显示满足阈值的体素。", sty),
         para("这个设计回答了一个关键问题：直方图中的尾部数据到底是什么？结果表明，高密度尾部不是随机散点，而是集中出现在宇宙网节点与致密丝束附近。统计异常因此获得了空间物理解释。", sty),
+        table([
+            ["交互环节", "数据处理", "联动结果"],
+            ["直方图刷选", "滑块把百分位转换为 log10(density) 上下界", "红色参考线实时标出被选密度区间"],
+            ["空间掩膜", "对三维体素计算 low <= logDensity <= high", "只保留满足阈值的物理单元格"],
+            ["三维投影", "沿视线方向对掩膜后的 log 密度取最大投影", "节点和致密丝束在右侧空间视图中显影"],
+            ["解释闭环", "统计尾部与空间位置共享同一阈值", "验证高密度尾部对应宇宙网骨架而非随机噪声"],
+        ], [34 * mm, 70 * mm, 70 * mm]),
+        Spacer(1, 5 * mm),
     ]
     story += image(STORY_DIR / "interaction_storyboard.png", "图 9  相空间刷选故事板：从直方图尾部定位三维节点结构", sty, 170 * mm)
     story += image(RESULTS_DIR / "05_interaction_selection" / "top1_percent_t0099.png", "图 10  t0099 前 1% 高密度区域刷选结果", sty, 130 * mm)
@@ -220,6 +250,15 @@ def build_answer_pdf():
             ["联合制作软件", "MATLAB R2024b + Python + FFmpeg"],
             ["核心成果", "体绘制、时序热力图、结构指标仪表盘、相空间交互刷选、演示视频"],
         ], [45 * mm, 120 * mm]),
+        Spacer(1, 5 * mm),
+        Paragraph("任务覆盖说明", sty["h1"]),
+        table([
+            ["任务要求", "对应成果", "核心文件"],
+            ["体数据渲染、传递函数与光照", "报告第 4 节；体绘制图、传递函数设计图", "code/step4_volume_render.m；results/02_volume_render；transfer_function_design.png"],
+            ["宇宙密度演化特征归纳", "报告第 5、9 节；宇宙网演化图谱", "cosmic_web_atlas.png；video/demo.mp4"],
+            ["100 步密度统计与对数直方图", "报告第 6 节；统计曲线、直方图热力图", "code/step2_density_statistics.m；code/step3_draw_histograms.m；data/processed/density_stats.csv"],
+            ["相空间交互刷选联动分析", "报告第 7 节；前 1% 高密度刷选结果和交互故事板", "code/interactive_dashboard.m；code/step5_high_density_selection.m；results/05_interaction_selection"],
+        ], [40 * mm, 58 * mm, 67 * mm]),
         Spacer(1, 5 * mm),
         Paragraph("提交清单", sty["h1"]),
     ]
