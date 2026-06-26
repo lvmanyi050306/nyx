@@ -23,6 +23,7 @@ REQUIRED_FILES = [
     "results/07_visual_story/interaction_storyboard.png",
     "results/07_visual_story/structure_metrics_dashboard.png",
     "results/07_visual_story/transfer_function_design.png",
+    "results/representative_image.jpg",
     "report/Answer_Sheet.docx",
     "report/Answer_Sheet.pdf",
     "report/技术报告.docx",

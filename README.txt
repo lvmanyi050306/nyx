@@ -4,7 +4,7 @@ Project structure:
 - data/raw: raw Nyx .dat files, named 0000.dat to 0099.dat. These files are not included in the submission package because of their size; place the course-provided raw data here before rerunning the full pipeline.
 - data/processed: generated statistics, threshold tables, and structure metrics.
 - code: MATLAB scripts for data checking, statistics, rendering, histograms, and high-density selection.
-- results: generated figures grouped by task.
+- results: generated figures grouped by task, plus representative_image.jpg for the official representative picture requirement.
 - report: technical report and answer sheet.
 - video: demonstration video.
 - final_submit: final compressed submission package.
@@ -37,8 +37,10 @@ Important generated assets:
 - results/07_visual_story/structure_metrics_dashboard.png
 - results/07_visual_story/transfer_function_design.png
 - results/07_visual_story/interaction_storyboard.png
+- results/representative_image.jpg
 - video/demo.mp4
 
 Submission note:
 - The zip intentionally excludes data/raw and video/frames.
-- The zip preserves code/, data/processed/, results/, report/, video/demo.mp4, README.txt, and 任务要求.txt.
+- The zip preserves code/, data/processed/, results/, report/, video/demo.mp4, results/representative_image.jpg, README.txt, and 任务要求.txt.
+- Official ChinaVis material mapping: report/技术报告.docx and report/技术报告.pdf are the work description document; video/demo.mp4 is the MP4 demonstration video; results/representative_image.jpg is the representative JPG image.

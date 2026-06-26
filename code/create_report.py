@@ -258,7 +258,7 @@ def build_answer_sheet():
         ["作品", "Nyx 宇宙学模拟密度场可视分析"],
         ["主题", "从暗雾到宇宙网骨架"],
         ["联合制作软件", "MATLAB R2024b + Python + FFmpeg"],
-        ["核心成果", "体绘制、时序热力图、结构指标仪表盘、相空间交互刷选、演示视频"],
+        ["核心成果", "体绘制、时序热力图、结构指标仪表盘、相空间交互刷选、代表图、演示视频"],
     ])
     doc.add_heading("任务覆盖说明", level=1)
     add_table(doc, [
@@ -274,6 +274,7 @@ def build_answer_sheet():
         "results：体绘制、直方图、统计曲线、高密度刷选、联合流程图、视觉故事图谱。",
         "data/processed：density_stats.csv、high_density_threshold.csv、structure_metrics.csv、statistics.mat。",
         "report：技术报告 DOCX/PDF 与 Answer Sheet DOCX/PDF。",
+        "results/representative_image.jpg：官方要求的 JPG 代表图。",
         "video：demo.mp4 演示视频。",
     ])
     out = REPORT_DIR / "Answer_Sheet.docx"
