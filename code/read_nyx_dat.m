@@ -1,52 +1,24 @@
-function volume = read_nyx_dat(filePath, gridSize, precision)
-%READ_NYX_DAT Read one Nyx density volume from a binary .dat file.
-%
-% Files are little-endian float32. Linear order is z first, then y, then x.
+function V = read_nyx_dat(filename)
+%READ_NYX_DAT 读取 Nyx little-endian float32 三维密度场。
+% 原始线性存储顺序为 z 最快、y 其次、x 最慢。
+% 输出 V 的维度为 [x, y, z]，便于 MATLAB 中按空间轴理解。
 
-if nargin < 3 || isempty(precision)
-    precision = "single";
+if nargin < 1 || ~isfile(filename)
+    error('输入文件不存在：%s', string(filename));
 end
 
-info = dir(filePath);
-if isempty(info)
-    error("read_nyx_dat:FileMissing", "File does not exist: %s", filePath);
-end
-
-bytesPerValue = bytes_per_value(precision);
-valueCount = info.bytes / bytesPerValue;
-if nargin < 2 || isempty(gridSize)
-    n = round(valueCount^(1 / 3));
-    if n^3 ~= valueCount
-        error("read_nyx_dat:CannotInferGrid", ...
-            "Cannot infer cubic grid size from %d values in %s.", valueCount, filePath);
-    end
-    gridSize = [n, n, n];
-end
-
-fid = fopen(filePath, "rb", "ieee-le");
+fid = fopen(filename, 'r', 'ieee-le');
 if fid < 0
-    error("read_nyx_dat:FileOpenFailed", "Cannot open file: %s", filePath);
+    error('无法打开文件：%s', filename);
 end
 
-cleanup = onCleanup(@() fclose(fid));
-raw = fread(fid, prod(gridSize), char("*" + precision));
+cleaner = onCleanup(@() fclose(fid));
+data = fread(fid, inf, 'single=>single');
+numVals = numel(data);
+n = infer_grid_size(numVals);
 
-if numel(raw) ~= prod(gridSize)
-    error("read_nyx_dat:SizeMismatch", ...
-        "Expected %d values, got %d in %s.", prod(gridSize), numel(raw), filePath);
-end
-
-zyx = reshape(raw, [gridSize(3), gridSize(2), gridSize(1)]);
-volume = permute(zyx, [3, 2, 1]);
-end
-
-function bytes = bytes_per_value(precision)
-switch string(precision)
-    case {"single", "float32"}
-        bytes = 4;
-    case {"double", "float64"}
-        bytes = 8;
-    otherwise
-        error("read_nyx_dat:UnsupportedPrecision", "Unsupported precision: %s", precision);
-end
+% Nyx 原始数据：data(z, y, x)，先按 [z,y,x] 重排，再转为 [x,y,z]。
+Vz_y_x = reshape(data, [n, n, n]);
+V = permute(Vz_y_x, [3, 2, 1]);
+V = single(V);
 end

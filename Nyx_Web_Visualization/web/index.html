@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nyx Density Explorer：宇宙密度演化交互式可视分析系统</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">ChinaVis 2026 赛题 II · 科学可视化课程展示</p>
+        <h1>Nyx Density Explorer：宇宙密度演化交互式可视分析系统</h1>
+        <p class="lead">
+          本作品基于 Nyx 宇宙学模拟密度数据，围绕三维密度场随时间演化展开可视分析。系统通过体数据投影、密度直方图、
+          时间-密度热力图、统计曲线和密度区间联动刷选，展示宇宙密度从相对均匀到高低密度分化、丝状结构和节点逐渐显现的过程。
+        </p>
+      </div>
+      <div class="status-card">
+        <span class="status-dot" id="statusDot"></span>
+        <div>
+          <strong id="loadStatus">等待加载 Web 数据</strong>
+          <small id="loadDetail">请先运行预处理脚本生成 assets/data</small>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <aside class="panel control-panel">
+        <div class="panel-title">
+          <span>Control Panel</span>
+          <button id="resetBtn" class="ghost-button" type="button">Reset</button>
+        </div>
+
+        <label class="control">
+          <span>Time Step <b id="timeLabel">0</b></span>
+          <input id="timeSlider" type="range" min="0" max="0" value="0">
+        </label>
+
+        <div class="button-row">
+          <button id="playBtn" class="primary-button" type="button">Play</button>
+          <select id="speedSelect" aria-label="播放速度">
+            <option value="900">0.7×</option>
+            <option value="550" selected>1×</option>
+            <option value="260">2×</option>
+          </select>
+        </div>
+
+        <div class="control dual">
+          <span>Density Percentile Range</span>
+          <div class="range-readout">
+            <b id="lowPctLabel">99</b>% - <b id="highPctLabel">100</b>%
+          </div>
+          <input id="lowPct" type="range" min="0" max="100" step="0.1" value="99">
+          <input id="highPct" type="range" min="0" max="100" step="0.1" value="100">
+        </div>
+
+        <label class="control">
+          <span>Projection Direction</span>
+          <select id="directionSelect">
+            <option value="Z" selected>Z / XY</option>
+            <option value="Y">Y / XZ</option>
+            <option value="X">X / YZ</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span>View Mode</span>
+          <select id="viewModeSelect">
+            <option value="maskedMIP" selected>Masked MIP</option>
+            <option value="mip">MIP</option>
+            <option value="mask">Mask</option>
+            <option value="slice">Slice</option>
+            <option value="composite">Volume Composite</option>
+          </select>
+        </label>
+
+        <label class="control">
+          <span>Transfer Function</span>
+          <select id="tfSelect">
+            <option value="balanced" selected>Balanced</option>
+            <option value="void">Void</option>
+            <option value="filament">Filament</option>
+            <option value="node">Node</option>
+          </select>
+        </label>
+
+        <div class="metric-stack">
+          <div class="metric-card">
+            <span>Selected Voxels</span>
+            <strong id="selectedCount">--</strong>
+          </div>
+          <div class="metric-card">
+            <span>Selected Ratio</span>
+            <strong id="selectedRatio">--</strong>
+          </div>
+          <div class="metric-card">
+            <span>Evolution Stage</span>
+            <strong id="stageLabel">--</strong>
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel main-view">
+        <div class="panel-title">
+          <span>Nyx Density Spatial View</span>
+          <span id="viewSubtitle" class="subtle">normalized log-density</span>
+        </div>
+        <div class="canvas-wrap spatial-wrap">
+          <canvas id="spatialCanvas" width="640" height="640"></canvas>
+          <div id="canvasOverlay" class="canvas-overlay">Loading...</div>
+        </div>
+        <p class="note">
+          拖动时间步滑条可以观察宇宙密度场随时间变化；调整密度百分位区间可以筛选特定密度范围的体素；
+          当选择 99% 到 100% 区间时，系统将显示 top 1% 高密度体素在空间中的分布。
+        </p>
+      </section>
+
+      <section class="panel side-view">
+        <div class="panel-title">
+          <span>Log-density Histogram & Brushing</span>
+          <span class="subtle">click / drag brush</span>
+        </div>
+        <canvas id="histCanvas" width="560" height="300"></canvas>
+        <div class="explain-card" id="brushExplain">
+          当前选择对应密度分布右尾。空间投影视图可用于观察这些高密度体素是否集中于丝状结构交汇处和节点区域。
+        </div>
+      </section>
+    </main>
+
+    <section class="lower-grid">
+      <section class="panel">
+        <div class="panel-title">
+          <span>Time-Density Heatmap</span>
+          <span class="subtle">点击热力图切换时间步</span>
+        </div>
+        <canvas id="heatmapCanvas" width="1100" height="280"></canvas>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <span>Density Evolution Metrics</span>
+          <span class="subtle">mean / std / P99 / P99 ratios</span>
+        </div>
+        <canvas id="metricCanvas" width="1100" height="310"></canvas>
+      </section>
+    </section>
+
+    <section class="story-grid">
+      <article class="panel">
+        <div class="panel-title"><span>从无到有的实验路线</span></div>
+        <img src="assets/images/iteration_roadmap.png" alt="Nyx 可视化项目从无到有的实验迭代路线图">
+      </article>
+      <article class="panel">
+        <div class="panel-title"><span>方法体系概览</span></div>
+        <div class="image-pair">
+          <img src="assets/images/nyx_keyword_wordcloud.png" alt="项目关键词词云">
+          <img src="assets/images/nyx_method_bubble_tags.png" alt="方法亮点气泡标签图">
+        </div>
+      </article>
+      <article class="panel conclusions">
+        <div class="panel-title"><span>结论卡片</span></div>
+        <ul id="conclusionList">
+          <li>早期密度分布更集中，后期密度波动增强。</li>
+          <li>高密度尾部增强，P99、P99/mean 与 P99-P01 可作为团块化观察指标。</li>
+          <li>低密度区域和高密度区域逐渐分化，丝状结构与节点逐渐显现。</li>
+          <li>linked brushing 建立统计分布与空间结构之间的双向关联。</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="footer-note">
+      科学说明：本系统中的结论主要服务于数据可视化课程实验，强调可视化方法如何帮助理解 Nyx 密度场的时空变化。
+      文中关于空洞、丝状结构和节点的描述基于给定数据与可视化结果，不作为正式天体物理科学结论。
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
