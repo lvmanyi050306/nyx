@@ -324,13 +324,22 @@ canvas {
 
 .bottom-analysis-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1.1fr 0.9fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-top: 18px;
   align-items: stretch;
 }
 
+.bottom-analysis-grid .panel-title {
+  font-size: 20px;
+}
+
+.bottom-analysis-grid .subtle {
+  font-size: 16px;
+}
+
 .analysis-panel {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   gap: 10px;

@@ -597,7 +597,7 @@ function renderTimeDensityHeatmap() {
   const tCount = values.length;
   const bCount = values[0]?.length || 0;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const pad = { l: 42, r: 12, t: 20, b: 32 };
+  const pad = { l: 72, r: 24, t: 36, b: 56 };
   const w = canvas.width - pad.l - pad.r;
   const h = canvas.height - pad.t - pad.b;
   const maxLog = Math.max(...values.flat().map((v) => Math.log10(v + 1e-8)));
@@ -626,7 +626,7 @@ function renderMetricCurves() {
   const canvas = el.metricCanvas;
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const pad = { l: 48, r: 18, t: 24, b: 36 };
+  const pad = { l: 72, r: 24, t: 44, b: 56 };
   const w = canvas.width - pad.l - pad.r;
   const h = canvas.height - pad.t - pad.b;
   drawPanelGrid(ctx, pad, w, h);
@@ -640,8 +640,8 @@ function renderMetricCurves() {
   series.forEach(([key, color, label], idx) => {
     drawMetricLine(ctx, key, color, pad, w, h);
     ctx.fillStyle = color;
-    ctx.font = "13px Microsoft YaHei, sans-serif";
-    ctx.fillText(label, pad.l + 8 + idx * 88, 18);
+    ctx.font = "22px Microsoft YaHei, sans-serif";
+    ctx.fillText(label, pad.l + 8 + idx * 150, 30);
   });
   drawCurrentTimeLine(ctx, pad, w, h, state.stats.length);
   drawAxisLabels(ctx, canvas, "time step", "normalized metrics");
@@ -655,7 +655,7 @@ function drawMetricLine(ctx, key, color, pad, w, h) {
   const minV = Math.min(...vals);
   const maxV = Math.max(...vals);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   vals.forEach((v, i) => {
     const x = pad.l + (i / Math.max(1, vals.length - 1)) * w;
@@ -875,7 +875,7 @@ function drawPanelGrid(ctx, pad, w, h) {
 function drawCurrentTimeLine(ctx, pad, w, h, count) {
   const x = pad.l + (state.currentTime / Math.max(1, count - 1)) * w;
   ctx.strokeStyle = "#ffd56f";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(x, pad.t);
   ctx.lineTo(x, pad.t + h);
@@ -883,10 +883,16 @@ function drawCurrentTimeLine(ctx, pad, w, h, count) {
 }
 
 function drawAxisLabels(ctx, canvas, xText, yText) {
+  ctx.save();
   ctx.fillStyle = "#dcecff";
-  ctx.font = "13px Microsoft YaHei, sans-serif";
-  ctx.fillText(yText, 8, 18);
-  ctx.fillText(xText, canvas.width - 110, canvas.height - 9);
+  ctx.font = "21px Microsoft YaHei, sans-serif";
+  ctx.textAlign = "right";
+  ctx.fillText(xText, canvas.width - 24, canvas.height - 16);
+  ctx.translate(22, canvas.height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.fillText(yText, 0, 0);
+  ctx.restore();
 }
 
 function getCurrentStage() {
