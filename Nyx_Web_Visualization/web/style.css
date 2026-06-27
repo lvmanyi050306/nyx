@@ -123,20 +123,6 @@ h1 {
   align-items: stretch;
 }
 
-.lower-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  margin-top: 18px;
-}
-
-.story-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 1.1fr 0.85fr;
-  gap: 18px;
-  margin-top: 18px;
-}
-
 .panel {
   border-radius: 8px;
   padding: 16px;
@@ -219,6 +205,28 @@ button:hover {
   gap: 10px;
 }
 
+.quick-brush {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.chip-button {
+  min-height: 30px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #dcecff;
+  font-size: 12px;
+  background: rgba(72, 216, 255, 0.08);
+}
+
+.chip-button.active,
+.chip-button:hover {
+  color: #08101f;
+  background: linear-gradient(135deg, #ffd56f, #ff9d3f);
+  border-color: transparent;
+}
+
 .dual input + input {
   margin-top: -2px;
 }
@@ -255,7 +263,7 @@ button:hover {
 }
 
 .main-view {
-  min-height: 720px;
+  min-height: 620px;
 }
 
 .canvas-wrap {
@@ -268,7 +276,7 @@ button:hover {
 }
 
 .spatial-wrap {
-  min-height: 620px;
+  min-height: 500px;
 }
 
 canvas {
@@ -314,23 +322,50 @@ canvas {
   font-size: 13px;
 }
 
-.story-grid img {
-  width: 100%;
-  display: block;
-  border-radius: 6px;
-  background: #fff;
-}
-
-.image-pair {
+.bottom-analysis-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: 1.1fr 1.1fr 0.9fr;
+  gap: 16px;
+  margin-top: 18px;
+  align-items: stretch;
 }
 
-.conclusions ul {
+.analysis-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.analysis-title {
+  color: var(--yellow);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.analysis-text {
   margin: 0;
-  padding-left: 20px;
+  color: #e8f3ff;
+  line-height: 1.72;
+  font-size: 14px;
+}
+
+.key-finding-list {
+  margin: 2px 0 0;
+  padding-left: 18px;
   color: #dbe7fb;
-  line-height: 1.85;
+  line-height: 1.65;
+  font-size: 13px;
+}
+
+.warning-note {
+  margin: auto 0 0;
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: #b9c7de;
+  line-height: 1.6;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.075);
 }
 
 .footer-note {
@@ -352,8 +387,7 @@ canvas {
 
   .hero,
   .dashboard-grid,
-  .lower-grid,
-  .story-grid {
+  .bottom-analysis-grid {
     grid-template-columns: 1fr;
   }
 

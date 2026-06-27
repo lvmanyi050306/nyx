@@ -65,9 +65,10 @@ function cacheElements() {
     "speedSelect", "lowPct", "highPct", "lowPctLabel", "highPctLabel", "directionSelect",
     "viewModeSelect", "tfSelect", "resetBtn", "selectedCount", "selectedRatio", "stageLabel",
     "viewSubtitle", "spatialCanvas", "canvasOverlay", "histCanvas", "heatmapCanvas",
-    "metricCanvas", "brushExplain", "conclusionList"
+    "metricCanvas", "brushExplain", "analysisText", "keyFindingList"
   ];
   ids.forEach((id) => { el[id] = document.getElementById(id); });
+  el.quickBrushButtons = Array.from(document.querySelectorAll(".chip-button[data-range]"));
 }
 
 /**
@@ -104,6 +105,15 @@ function bindEvents() {
   el.tfSelect.addEventListener("change", async () => {
     state.transferMode = el.tfSelect.value;
     await updateDashboard(false);
+  });
+
+  el.quickBrushButtons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const [low, high] = btn.dataset.range.split(",").map(Number);
+      state.lowPct = low;
+      state.highPct = high;
+      await updateDashboard(false);
+    });
   });
 
   el.playBtn.addEventListener("click", () => {
@@ -290,6 +300,7 @@ async function updateDashboard(loadNewVolume = true) {
     renderTimeDensityHeatmap();
     renderMetricCurves();
     updateConclusionCards();
+    updateAnalysisPanel();
     hideOverlay();
   } catch (err) {
     console.error(err);
@@ -665,16 +676,99 @@ function updateMetrics() {
   el.selectedRatio.textContent = `${(ratio * 100).toFixed(2)}%`;
   const stage = getCurrentStage();
   el.stageLabel.textContent = stage;
+  updateQuickBrushState();
 }
 
 /**
  * 根据当前时间步更新结论卡片。
  */
 function updateConclusionCards() {
+  const message = getBrushInterpretation();
+  if (el.brushExplain) el.brushExplain.textContent = message;
+}
+
+/**
+ * 更新底部动态解释面板，说明当前时间步、刷选区间和空间视图的分析意义。
+ */
+function updateAnalysisPanel() {
+  if (!el.analysisText || !el.keyFindingList) return;
+  const ratio = getSelectedRatio();
+  const stage = getCurrentStage();
+  const rangeLabel = `${formatPct(state.lowPct)}%-${formatPct(state.highPct)}%`;
+  const viewLabel = describeViewMode(state.viewMode);
+  const directionLabel = describeDirection(state.direction);
+  const transferLabel = describeTransferFunction(state.transferMode);
+
+  el.analysisText.textContent = getBrushInterpretation();
+  el.keyFindingList.innerHTML = [
+    `<li>当前时间步：t=${String(state.currentTime).padStart(4, "0")}；演化阶段：${stage}。</li>`,
+    `<li>当前密度区间：${rangeLabel}；被选体素比例：${(ratio * 100).toFixed(2)}%。</li>`,
+    `<li>当前空间视图：${directionLabel} 方向的 ${viewLabel}，传递函数为 ${transferLabel}。</li>`,
+    "<li>分析目的：把统计直方图中的密度区间映射回空间位置，观察数值分布与三维结构之间的对应关系。</li>"
+  ].join("");
+}
+
+/**
+ * 根据刷选区间生成面向答辩展示的解释文字。
+ */
+function getBrushInterpretation() {
   const topOne = state.lowPct >= 98.9 && state.highPct >= 99.9;
-  el.brushExplain.textContent = topOne
-    ? "当前选择为 Top 1% high-density cells，对应密度分布右尾。空间投影视图可用于观察这些高密度体素是否集中于丝状结构交汇处和节点区域。"
-    : "当前选择为自定义密度百分位区间。调整刷选范围可以比较低密度背景、中密度丝状结构和高密度节点在空间中的位置差异。";
+  const midDensity = state.lowPct >= 39.5 && state.lowPct <= 40.5 && state.highPct >= 69.5 && state.highPct <= 70.5;
+  const lowDensity = state.lowPct <= 0.5 && state.highPct >= 19.5 && state.highPct <= 20.5;
+  if (topOne) {
+    return "当前选择的是密度分布右尾的 Top 1% 高密度体素。空间视图中被高亮的区域可用于观察极高密度体素是否集中在丝状结构交汇处和节点区域，从而验证统计高尾部与宇宙网致密结构之间的对应关系。";
+  }
+  if (midDensity) {
+    return "当前选择的是中密度区间，适合观察连续丝状结构和过渡区域。该区间有助于理解空洞边界与高密度节点之间的连接关系。";
+  }
+  if (lowDensity) {
+    return "当前选择的是低密度区间，适合观察低密度背景和可能的宇宙空洞区域。该视图可以帮助比较低密度区域与高密度节点在空间上的分离关系。";
+  }
+  return "当前选择的是自定义密度百分位区间，系统将统计分布中的该区间映射回空间视图，用于分析数值分布与三维结构之间的关系。";
+}
+
+/**
+ * 高亮当前匹配的快捷刷选按钮。
+ */
+function updateQuickBrushState() {
+  if (!el.quickBrushButtons) return;
+  el.quickBrushButtons.forEach((btn) => {
+    const [low, high] = btn.dataset.range.split(",").map(Number);
+    const active = Math.abs(state.lowPct - low) < 0.05 && Math.abs(state.highPct - high) < 0.05;
+    btn.classList.toggle("active", active);
+  });
+}
+
+function getSelectedRatio() {
+  const total = state.currentVolume ? state.currentVolume.length : 0;
+  return total ? state.selectedCount / total : 0;
+}
+
+function describeDirection(direction) {
+  if (direction === "X") return "X/YZ";
+  if (direction === "Y") return "Y/XZ";
+  return "Z/XY";
+}
+
+function describeViewMode(mode) {
+  const labels = {
+    mip: "最大强度投影",
+    mask: "二值 mask 投影",
+    maskedMIP: "mask 后最大强度投影",
+    slice: "中心切片",
+    composite: "简化体绘制"
+  };
+  return labels[mode] || mode;
+}
+
+function describeTransferFunction(mode) {
+  const labels = {
+    balanced: "Balanced 综合显示",
+    void: "Void 低密度增强",
+    filament: "Filament 中密度增强",
+    node: "Node 高密度增强"
+  };
+  return labels[mode] || mode;
 }
 
 /**

@@ -56,6 +56,13 @@
           <input id="highPct" type="range" min="0" max="100" step="0.1" value="100">
         </div>
 
+        <div class="quick-brush">
+          <button class="chip-button" type="button" data-range="0,20">Low 0-20%</button>
+          <button class="chip-button" type="button" data-range="40,70">Mid 40-70%</button>
+          <button class="chip-button" type="button" data-range="90,100">High 90-100%</button>
+          <button class="chip-button active" type="button" data-range="99,100">Top 1%</button>
+        </div>
+
         <label class="control">
           <span>Projection Direction</span>
           <select id="directionSelect">
@@ -129,7 +136,7 @@
       </section>
     </main>
 
-    <section class="lower-grid">
+    <section class="bottom-analysis-grid">
       <section class="panel">
         <div class="panel-title">
           <span>Time-Density Heatmap</span>
@@ -145,29 +152,25 @@
         </div>
         <canvas id="metricCanvas" width="1100" height="310"></canvas>
       </section>
-    </section>
 
-    <section class="story-grid">
-      <article class="panel">
-        <div class="panel-title"><span>从无到有的实验路线</span></div>
-        <img src="assets/images/iteration_roadmap.png" alt="Nyx 可视化项目从无到有的实验迭代路线图">
-      </article>
-      <article class="panel">
-        <div class="panel-title"><span>方法体系概览</span></div>
-        <div class="image-pair">
-          <img src="assets/images/nyx_keyword_wordcloud.png" alt="项目关键词词云">
-          <img src="assets/images/nyx_method_bubble_tags.png" alt="方法亮点气泡标签图">
+      <section class="panel analysis-panel">
+        <div class="panel-title">
+          <span>Analysis & Interpretation</span>
+          <span class="subtle">dynamic finding</span>
         </div>
-      </article>
-      <article class="panel conclusions">
-        <div class="panel-title"><span>结论卡片</span></div>
-        <ul id="conclusionList">
-          <li>早期密度分布更集中，后期密度波动增强。</li>
-          <li>高密度尾部增强，P99、P99/mean 与 P99-P01 可作为团块化观察指标。</li>
-          <li>低密度区域和高密度区域逐渐分化，丝状结构与节点逐渐显现。</li>
-          <li>linked brushing 建立统计分布与空间结构之间的双向关联。</li>
+        <div class="analysis-title">当前交互分析结论</div>
+        <p id="analysisText" class="analysis-text">
+          当前选择的是密度分布右尾的 Top 1% 高密度体素。空间视图可用于观察这些体素是否集中在丝状结构交汇处和节点区域。
+        </p>
+        <ul id="keyFindingList" class="key-finding-list">
+          <li>当前阶段：--</li>
+          <li>当前选择比例：--</li>
+          <li>当前视图模式：Masked MIP</li>
         </ul>
-      </article>
+        <p class="warning-note">
+          提醒：本系统用于数据可视化课程实验，图中关于空洞、丝状结构和节点的解释基于给定数据与可视化结果，不作为正式天体物理结论。
+        </p>
+      </section>
     </section>
 
     <footer class="footer-note">
