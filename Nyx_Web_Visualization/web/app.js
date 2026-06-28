@@ -51,7 +51,7 @@ async function init() {
     setStatus("ready", "Web 数据加载完成", `${state.metadata.time_steps} 个时间步，${state.metadata.web_grid_size}³ Web 体数据。`);
   } catch (err) {
     console.error(err);
-    setStatus("error", "数据加载失败", "请先运行 scripts/preprocess_for_web.py 生成 web/assets/data/ 数据文件。");
+    setStatus("error", "数据加载失败", "请先运行 Nyx_Web_Visualization/scripts/preprocess_for_web.py 生成 web/assets/data/ 数据文件。");
     showOverlay("请先运行预处理脚本生成 web/assets/data 数据。\n\npython Nyx_Web_Visualization/scripts/preprocess_for_web.py --input data/raw --output Nyx_Web_Visualization/web/assets/data --size 64");
   }
 }

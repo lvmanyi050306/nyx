@@ -8,15 +8,25 @@
 
 ## 2. 运行方法
 
-### 步骤 1：生成 Web 数据
+### 方法一：一键启动
 
-在项目根目录运行：
+推荐在项目根目录运行：
 
 ```bash
-python scripts/preprocess_for_web.py --input data/raw --output Nyx_Web_Visualization/web/assets/data --size 64
+python start_nyx_web_demo.py
 ```
 
-也可以直接运行 Web 子项目脚本：
+或双击：
+
+```text
+start_nyx_web_demo.bat
+```
+
+启动器会自动检查 Web 数据是否存在；如果缺少体数据，会调用 Web 子项目脚本生成。也可以手动运行：
+
+### 方法二：手动启动
+
+先在项目根目录生成 Web 数据：
 
 ```bash
 python Nyx_Web_Visualization/scripts/preprocess_for_web.py --input data/raw --output Nyx_Web_Visualization/web/assets/data --size 64
@@ -32,14 +42,14 @@ python Nyx_Web_Visualization/scripts/preprocess_for_web.py --input data/raw --ou
 - `web/assets/data/time_similarity_stage.json`
 - `web/assets/data/volumes/vol_0000.bin` 等降采样体数据
 
-### 步骤 2：启动本地服务器
+然后启动本地服务器：
 
 ```bash
 cd Nyx_Web_Visualization/web
 python -m http.server 8000
 ```
 
-### 步骤 3：浏览器打开
+浏览器打开：
 
 ```text
 http://localhost:8000

@@ -33,7 +33,7 @@ def find_free_port(start: int = 8000, end: int = 8010) -> int:
 
 def run_preprocess(root: Path) -> None:
     """运行 Web 数据预处理。"""
-    script = root / "scripts" / "preprocess_for_web.py"
+    script = root / "Nyx_Web_Visualization" / "scripts" / "preprocess_for_web.py"
     if not script.exists():
         raise FileNotFoundError(f"未找到预处理脚本：{script}")
     cmd = [

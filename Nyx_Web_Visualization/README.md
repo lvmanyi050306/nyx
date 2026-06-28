@@ -34,14 +34,26 @@ Nyx_Web_Visualization/
    └─ build_web_data.py
 ```
 
-根目录 `scripts/` 也提供了同名兼容入口，便于从原项目根目录直接运行。
+Web 数据预处理脚本统一保留在 `Nyx_Web_Visualization/scripts/` 中。项目根目录的 `start_nyx_web_demo.py` 会自动调用这里的脚本。
 
 ## 快速运行
 
-在原项目根目录运行：
+推荐在项目根目录直接运行：
 
 ```bash
-python scripts/preprocess_for_web.py --input data/raw --output Nyx_Web_Visualization/web/assets/data --size 64
+python start_nyx_web_demo.py
+```
+
+或双击：
+
+```text
+start_nyx_web_demo.bat
+```
+
+如需手动生成 Web 数据，可在项目根目录运行：
+
+```bash
+python Nyx_Web_Visualization/scripts/preprocess_for_web.py --input data/raw --output Nyx_Web_Visualization/web/assets/data --size 64
 cd Nyx_Web_Visualization/web
 python -m http.server 8000
 ```
