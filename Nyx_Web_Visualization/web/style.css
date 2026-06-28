@@ -324,10 +324,24 @@ canvas {
 
 .bottom-analysis-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1.1fr 0.9fr;
+  grid-template-columns: minmax(0, 1.28fr) minmax(0, 1.28fr) minmax(360px, 0.84fr);
   gap: 16px;
   margin-top: 18px;
   align-items: stretch;
+}
+
+.chart-panel {
+  min-height: 420px;
+}
+
+.chart-panel .panel-title {
+  margin-bottom: 8px;
+}
+
+#heatmapCanvas,
+#metricCanvas {
+  min-height: 320px;
+  max-height: 430px;
 }
 
 .analysis-panel {
